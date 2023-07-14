@@ -1,13 +1,25 @@
 package com.development.flowmaster.presentation.flow_counter
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.fold
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.reduce
 import kotlinx.coroutines.flow.retry
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class FlowCounterViewModel : ViewModel() {
-    val counterFlow = flow<Int> {
+    val countDownFlow = flow<Int> {
         val startingCount = 10
         var currentCount = startingCount
         emit(currentCount)
@@ -18,8 +30,13 @@ class FlowCounterViewModel : ViewModel() {
         }
     }
 
+    init {
+//        countCountDownFlow()
+//        reduceCountDownFlow()
+        flatCountDownFlow()
+    }
 
-    fun startCounterFlow() : Flow<Int> {
+    fun startCounterFlow(): Flow<Int> {
         return flow<Int> {
             val startingCount = 10
             var currentCount = startingCount
@@ -31,4 +48,61 @@ class FlowCounterViewModel : ViewModel() {
             }
         }
     }
+
+    private fun countCountDownFlow() {
+        viewModelScope.launch {
+            val totalEvenCount = countDownFlow.map {
+                it * it
+            }.onEach {
+                Timber.tag("counter").d("current time is : $it")
+            }.filter {
+                it % 2 == 0
+            }.onEach {
+                Timber.tag("counter").d("current modified even time is : $it")
+            }.count()
+
+            Timber.tag("counter").d("Total even number count is : $totalEvenCount")
+        }
+    }
+
+    private fun reduceCountDownFlow() {
+        viewModelScope.launch {
+            val reducedResult = countDownFlow.onEach {
+                Timber.tag("counter").d("current time is : $it")
+            }.reduce { accumulator, value -> accumulator + value }
+
+            val reducedResultFold = countDownFlow.onEach {
+                Timber.tag("counter").d("current time is : $it")
+            }.fold(initial = 100) { accumulator, value -> accumulator + value }
+
+            Timber.tag("counter").d("Reduced Result is : $reducedResultFold")
+        }
+    }
+
+    // You can use flatMerge in real world.
+    // emit user movie list from db.
+    // when network call is complete emit updated movie list
+    // flatConcat is used for database operations which need to complete in order
+    private fun flatCountDownFlow(){
+        val numberListFlow = flow<Int> {
+            emit(1)
+            emit(2)
+            emit(3)
+            emit(4)
+            emit(5)
+        }
+
+        viewModelScope.launch {
+            numberListFlow.flatMapMerge {
+                flow <Int>{
+                    emit(it * 10)
+                    delay(2000)
+                    emit(it * 100)
+                }
+            }.collectLatest {
+                Timber.tag("flatCountDownFlow").d(it.toString())
+            }
+        }
+    }
+
 }

@@ -25,7 +25,7 @@ import com.development.flowmaster.presentation.global.DefaultTopBar
 @Composable
 fun FlowCounterScreen(navController: NavController, drawerState: DrawerState) {
     val viewModel = viewModel<FlowCounterViewModel>()
-    val counterState = viewModel.startCounterFlow().collectAsState(initial = 10)
+    val counterState = viewModel.countDownFlow.collectAsState(initial = 10)
 
     Scaffold(
         topBar = {
