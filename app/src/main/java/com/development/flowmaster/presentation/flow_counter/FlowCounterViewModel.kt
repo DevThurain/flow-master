@@ -1,10 +1,14 @@
 package com.development.flowmaster.presentation.flow_counter
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapConcat
@@ -33,7 +37,8 @@ class FlowCounterViewModel : ViewModel() {
     init {
 //        countCountDownFlow()
 //        reduceCountDownFlow()
-        flatCountDownFlow()
+//        flatNumberFlow()
+        bufferFlow()
     }
 
     fun startCounterFlow(): Flow<Int> {
@@ -83,7 +88,7 @@ class FlowCounterViewModel : ViewModel() {
     // emit user movie list from db.
     // when network call is complete emit updated movie list
     // flatConcat is used for database operations which need to complete in order
-    private fun flatCountDownFlow(){
+    private fun flatNumberFlow() {
         val numberListFlow = flow<Int> {
             emit(1)
             emit(2)
@@ -94,13 +99,39 @@ class FlowCounterViewModel : ViewModel() {
 
         viewModelScope.launch {
             numberListFlow.flatMapMerge {
-                flow <Int>{
+                flow<Int> {
                     emit(it * 10)
                     delay(2000)
                     emit(it * 100)
                 }
             }.collectLatest {
                 Timber.tag("flatCountDownFlow").d(it.toString())
+            }
+        }
+    }
+
+
+    // buffer() run normally
+    // conflate() skip dish2 if dish1 is not finished and dish 3 is ready
+    // collectLatest() skip finishing dish if other dish is ready.
+    private fun bufferFlow() {
+        val dishFlow = flow<String> {
+            emit("Dish 1")
+            delay(1000)
+            emit("Dish 2")
+            delay(100)
+            emit("Dish 3")
+        }
+
+        viewModelScope.launch {
+            dishFlow.onEach {
+                Timber.tag("dish").d("$it is arrived.")
+            }
+                .conflate()
+                .collectLatest{
+                Timber.tag("dish").d("eating $it")
+                delay(2000)
+                Timber.tag("dish").d("finished eating $it")
             }
         }
     }
