@@ -3,7 +3,6 @@ package com.development.flowmaster
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
@@ -17,8 +16,6 @@ import androidx.compose.material.*
 import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.NavigationBarItemColors
-import androidx.compose.material3.NavigationDrawerItemColors
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.NavigationDrawerItem as M3DrawerItem
 import androidx.compose.runtime.Composable
@@ -30,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -40,9 +36,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.development.flowmaster.presentation.app_start.AppStartScreen
 import com.development.flowmaster.presentation.flow_counter.FlowCounterScreen
-import com.development.flowmaster.ui.theme.CustomGreenDark
+import com.development.flowmaster.presentation.state_flow_and_share_flow.StateFlowAndShareFlowScreen
 import com.development.flowmaster.ui.theme.FlowMasterTheme
-import com.development.flowmaster.viewmodels.MainViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -92,7 +87,6 @@ fun DrawerContent(navController: NavController, drawerState: DrawerState) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
         M3DrawerItemWrapper(
             label = "Flow Counter",
             route = Routes.FlowCounterScreenRoute,
@@ -101,10 +95,17 @@ fun DrawerContent(navController: NavController, drawerState: DrawerState) {
         )
 
         Spacer(modifier = Modifier.height(8.dp))
-
         M3DrawerItemWrapper(
             label = "App Start",
             route = Routes.AppStartScreenRoute,
+            drawerState = drawerState,
+            navController = navController
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        M3DrawerItemWrapper(
+            label = "State Flow & Shared Flow",
+            route = Routes.StateFlowAndShareFlowRoute,
             drawerState = drawerState,
             navController = navController
         )
@@ -126,6 +127,9 @@ fun NavigationContent(navController: NavHostController, drawerState: DrawerState
         }
         composable(route = Routes.AppStartScreenRoute) {
             AppStartScreen(navController = navController, drawerState = drawerState)
+        }
+        composable(route = Routes.StateFlowAndShareFlowRoute) {
+            StateFlowAndShareFlowScreen(navController = navController, drawerState = drawerState)
         }
     }
 }
